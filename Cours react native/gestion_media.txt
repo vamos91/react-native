@@ -1,0 +1,338 @@
+Il existe plusieurs moyens de communiquer des informations du frontend vers le backend :
+
+Envoi en GET (envoi limité d’informations)
+Envoi en POST (envoi illimité)
+
+
+L’envoi en POST va donc être utilisé pour envoyer des données plus volumineuses notamment pour envoyer des fichiers au backend.
+
+1.1 Quel mode d’envoi choisir ?
+Les modes d’envoi en POST diffèrent selon le type d’encodage utilisé. Le type d’encodage est une manière d’agencer les données et de prévenir le backend de la manière dont ces données ont été organisées  :
+
+On a utilisé jusqu’à présent le type d’encodage x-www-form-urlencoded : ce type d’encodage permet d’envoyer des chaînes de caractères au backend uniquement
+Le type d’encodage form-data va nous permettre d’envoyer autant des chaînes de caractères que des fichiers. Il va donc être totalement adapté à l’envoi de photos par exemple.
+
+
+1.2 Form-data ?
+Javascript va fournir un objet clé en main Formdata qui nous permet de rajouter des informations (chaîne de caractères) sous forme de clé/valeur.
+
+Il permet également de rajouter des informations de fichier à envoyer au Backend
+
+1.3 Uniquement pour React Native ?
+Non, form-data est utilisable également pour le Web (React ou Vanilla JS). Il permet de cibler un formulaire qui peut contenir des inputs de type text ou file par exemple et de récupérer l’ensemble des informations du formulaire pour les envoyer directement au Backend.
+
+
+
+J'ai lu cette partie
+2 - TUTORIEL
+2.1 Rappel d’un envoi en POST en JS
+fetch('https://.../upload', {
+ method: 'POST',
+
+ headers: {'Content-Type':'application/x-www-form-urlencoded'},
+
+ body: 'name=john&username=doe&email=john@gmail.com'
+
+});
+
+Dans cet exemple, nous envoyons des chaînes de caractères en POST avec le type d’encodage x-www-form-urlencoded
+
+On définit le type d’encodage dans le headers de notre requête
+headers: {'Content-Type':'application/x-www-form-urlencoded'},
+
+
+On envoie les données dans le body
+body: 'name=john&username=doe&email=john@gmail.com'
+
+
+2.2 Le format form-data
+var data = new FormData();
+
+data.append('firstName', 'John');
+data.append('lastName', 'Doe');
+
+fetch("http://.../upload", {
+ method: 'post',
+ body: data
+})
+
+
+On crée l’objet FormData
+var data = new FormData();
+
+On initialise un objet FormData qui contiendra l’ensemble des informations à transmettre au Backend
+
+On ajoute des informations
+data.append('firstName', 'John');
+data.append('lastName', 'Doe');
+
+
+On ajoute chaque information sous forme de clé/valeur
+
+
+Requête au Backend
+fetch("http://.../upload", {
+ method: 'post',
+ body: data
+})
+
+La requête est envoyée au Backend via la méthode POST.
+
+L’objet data est fourni dans le body de la requête.
+
+2.3 Envoi d’un fichier depuis le web
+index.html
+<form id="userForm">
+ <div>
+   <input type="text" name="firstName">
+ </div>
+ <div>
+   <input type="file" name="avatar">
+ </div>
+ <input type="submit" value="ok">
+</form>
+
+Notre formulaire contient un champ text et un champ file pour proposer à l’utilisateur d'envoyer un fichier
+
+script.js
+var myForm = document.getElementById('userForm');
+
+myForm.addEventListener("submit", function(e){
+ e.preventDefault();
+ var data = new FormData(myForm);  
+ fetch("http://.../upload", {
+   method: 'post',
+   body: data
+ })
+});
+
+
+On cible le formulaire
+var myForm = document.getElementById('userForm')
+
+
+On met sur écoute la validation du formulaire
+myForm.addEventListener("submit", function(e){
+
+
+On annule la validation du formulaire HTML
+e.preventDefault();
+
+Pour traiter la validation du formulaire en Javascript, on bloque sa validation HTML
+
+Initialisation de l’objet FormData
+var data = new FormData(myForm);
+
+On indique le formulaire associé à cet objet. ici, myForm.
+
+Pas besoin d’ajouter les informations sous forme de clé/valeur. Elles sont récupérées directement du formulaire et ajoutées à notre objet
+
+On envoie les données au Backend
+fetch("http://.../upload", {
+   method: 'post',
+   body: data
+ })
+
+2.4 Envoi d’un fichier en React Native
+var data = new FormData();
+
+data.append('avatar', {
+ uri: "file://....",
+ type: 'image/jpeg',
+ name: 'user_avatar.jpg',
+});
+
+fetch("http://.../upload", {
+ method: 'post',
+ body: data
+})
+
+
+On initialise l’objet FormData
+var data = new FormData();
+
+
+On ajoute à notre objet le fichier à envoyer
+data.append('avatar', {...})
+
+Le premier paramètre est le nom du fichier tel qu’il sera envoyé au Backend, le deuxième paramètre est un objet JSON contenant les informations du fichier à envoyer
+
+
+On précise l’URI du fichier à envoyer
+
+uri: "file://....",
+
+
+Format du fichier
+type: 'image/jpeg',
+
+Il s’agit du mimetype. On retrouve l’ensemble des mimetype pour chaque type de fichier ici : https://developer.mozilla.org/fr/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types#:~:text=text%2Fplain%20est%20le%20type,dans%20tous%20les%20autres%20cas.
+
+Nom d’origine de l’image
+name: 'user_avatar.jpg',
+
+
+Envoi de la requête au Backend
+fetch("http://.../upload", {
+ method: 'post',
+ body: data
+})
+
+
+
+BACKEND
+
+Le Frontend peut désormais envoyer des fichiers au Backend en POST avec le type d’encodage form-data.
+
+Notre Backend va devoir réceptionner les fichiers envoyés et être en capacité de gérer le type d’encodage form-data.
+
+1.1 Express gère le type d’encodage form-data ?
+Par défaut, Express ne sait pas gérer un envoi POST de type form-data. Nous allons donc devoir installer un nouveau module pour prendre en compte cet encodage.
+
+1.2 Quel module choisir ?
+Il existe de nombreux modules pour gérer le form-data sous Express. Un des modules de référence est le module express-fileupload qui permet la prise en compte de ce type d’encodage.
+
+1.3 express-fileupload
+Ce module doit être installé et paramétré dans notre Backend.
+
+Les chaînes de caractères envoyées via le form-data vont être disponibles dans nos routes, dans l’objet req.body. En revanche, les fichiers envoyés seront accessibles dans l’objet req.files
+
+1.4 Et on fait quoi du fichier réceptionné ?
+Le backend va pouvoir exploiter différentes informations sur ce fichier :
+
+Le nom du fichier
+Le format du fichier
+Les données brutes du fichier
+Le fichier envoyé est disponible temporairement. Pour enregistrer durablement le fichier, notre backend pourra alors déplacer le fichier vers un répertoire.
+
+Plusieurs possibilités seront offertes au backend :
+
+Enregistrer le fichier dans son répertoire public afin que ce document soit accessible à tous, notamment au Frontend.
+Enregistrer ce fichier dans un répertoire temporaire, puis l’envoyer vers une solution dans le cloud.
+
+J'ai lu cette partie
+2 - STEP BY STEP
+2.1 Installation du module
+npm install --save express-fileupload
+
+Ce module est nécessaire pour manipuler les données envoyées au format form-data
+
+Mise en place dans le framework (app.js ligne 1)
+var fileUpload = require('express-fileupload');
+
+
+Utilisation dans le framework (app.js, après var app = express())
+app.use(fileUpload());
+
+2.2 Réception des informations
+Frontend
+var data = new FormData();
+
+data.append('avatar', {
+ uri: "file://....",
+ type: 'image/jpeg',
+ name: 'user_avatar.jpg',
+});
+
+Pour rappel, notre frontend a créé un objet form-data dans lequel il ajoute le fichier “avatar” et le nom de l’utilisateur. Ces données sont envoyées au Backend via le fetch.
+
+Backend (routes/index.js)
+router.post('/upload', function(req, res, next) {
+ console.log(req.files.avatar);
+
+Le backend peut désormais exploiter les informations fournies par le frontend.
+
+req.files.avatar fait référence au nom du fichier envoyé dans le form-data : “avatar”.
+
+req.body.username fait lui référence à la clé username envoyée également par le form-data
+
+Tous les fichiers envoyés via le form-data sont récupérables dans l’objet req.files, toutes les chaînes de caractères sont exploitables via le req.body.
+
+2.3 Zoom sur le fichier reçu
+router.post('/upload', function(req, res, next) {
+ console.log(req.files.avatar.name);
+ console.log(req.files.avatar.mimetype);
+ console.log(req.files.avatar.data);
+});
+
+
+Nom d’origine de l’image
+console.log(req.files.avatar.name);
+
+
+Le format de fichier
+console.log(req.files.avatar.mimetype);
+
+Le type mime est un format qui permet de connaître le format réel du fichier envoyé, peu importe l’extension du fichier. Si vous modifiez un fichier jpg en pdf, le format réel du fichier ne change pas, son type mime non plus (image/jpeg).
+
+Données brutes du fichier
+console.log(req.files.avatar.data);
+
+C’est sous forme de chaîne de caractères que notre fichier peut transiter du Frontend vers le Backend.
+
+Nous récupérons ici la chaîne de caractères qui correspond au contenu du fichier envoyé. Avec cette longue chaîne de caractères, nous pouvons “reconstituer” côté Backend le fichier envoyé.
+
+2.4 Sauvegarder le fichier
+router.post('/upload', async function(req, res, next) {  
+ var resultCopy = await req.files.avatar.mv('./tmp/avatar.jpg');
+
+ if(!resultCopy) {
+   res.json({result: true, message: 'File uploaded!'} );      
+ } else {
+   res.json({result: false, message: resultCopy} );
+ }
+});
+
+Pour conserver le fichier durablement, nous allons devoir l’enregistrer dans un répertoire. Ici, nous choisissons de l'enregistrer dans un répertoire temporairement avant de l’envoyer vers un service cloud.
+
+Copie du fichier vers un répertoire local
+var resultCopy = await req.files.avatar.mv('./tmp/avatar.jpg');
+
+La méthode mv() permet de déplacer notre fichier vers le répertoire local de notre choix. Dans cet exemple, nous déplaçons notre fichier vers le répertoire tmp à la racine. Ce fichier se nommera avatar.jpg.
+
+Attention, pour déplacer un fichier dans un répertoire, il faut que ce répertoire existe. Pensez à le créer en amont.
+
+Le fichier est alors enregistré durablement dans le répertoire indiqué.
+
+Vérification de la copie
+if(!resultCopy) {...}
+
+La méthode mv() retourne un résultat undefined si tout s’est bien passé (ou une erreur en chaîne de caractères le cas échéant). Notre condition !resultCopy sera exécutée si la copie a fonctionné.
+
+2.5 Rendre le nom de l’image unique
+Pour le moment, notre route côté backend permet d’enregistrer toutes les photos qu’on lui envoie dans le même répertoire tmp mais surtout avec toujours le même nom : avatar.jpg.
+
+Notre premier fichier va donc bien être réceptionné et copié dans tmp. Le deuxième fichier envoyé sera enregistré avec le même nom et va écraser le premier fichier.
+
+Pour éviter cela, nous allons devoir enregistrer chaque fichier avec des noms différents et uniques.
+
+Installation du module uniqid
+npm install --save uniqid
+
+Nous allons installer un module permettant de générer des identifiants uniques.
+
+Génération d’un nom d’image unique
+var uniqid = require('uniqid');
+
+router.post('/upload', async function(req, res, next) {
+
+ var resultCopy = await req.files.avatar.mv('./tmp/'+uniqid()+'.jpg');
+ 
+ if(!resultCopy) {
+   res.json({result: true, message: 'File uploaded!'} );      
+ } else {
+   res.json({result: false, message: resultCopy} );
+ }
+
+});
+
+
+Import du module
+var uniqid = require('uniqid');
+
+On importe le module de notre application
+
+Génération d’un ID unique
+var resultCopy = await req.files.avatar.mv('./tmp/'+uniqid()+'.jpg');
+
+Grâce au module uniqid, on génère un nom de fichier unique : les fichiers enregistrés côté Backend auront chacun un nom différent et ne s'écraseront plus.
